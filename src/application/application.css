@@ -1,1 +1,4 @@
-/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+.custom-button {
+    -fx-pref-width: 30px;
+    -fx-pref-height: 30px;
+}
