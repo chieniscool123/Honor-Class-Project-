@@ -1,0 +1,15 @@
+BIOL 100: Survey of Biology
+BIOL 105: Disease in Modern Society
+BIOL 211: Majors Cellular
+BIOL 221: Majors Ecology/Evolution
+BIOL 222: Majors Cell/Molecular
+BIOL 223: Majors Organismal Physiology
+BIOL 231: Human Anatomy
+BIOL 260: Microbiology
+BOT 113: Plants of the Pacific Northwest
+BOT 115D: Ethnobotany: Plants and People
+ENVS& 101: Introduction to Environmental Science: with Lab
+NAT S 105: Science of Music
+NAT S 107: Physical Science for Everybody
+NAT S 150: Science of Weight Loss
+NUTR 180: Sustainable Food Systems: What to Eat and Why It Matters

@@ -1,0 +1,19 @@
+ASTR 100: Survey of Astronomy
+ASTR 101: Introduction to Astronomy
+ASTR 122: Life in the Universe
+ASTR 115: Stars, Galaxies, and Cosmos
+ATM S 101: Weather
+GEOL 102: Introduction to Geological Science I
+GEOL 103: Historical Geology
+GEOL 104: Introduction to Geological Science II
+GEOL 106: Survey of Earth Science
+GEOL 107: Earth Science for Everybody
+GEOL 108: Geological Natural Disasters – Living with the Earth
+GEOL 110: Environmental Geology
+GEOL 190: Regional Geoscience Field Exploration
+GEOL 208: Geology of the Pacific NW
+OCEA 101: Introduction to Oceanography w/Lab
+PHYS 102: Concepts and Connections
+PHYS 114: General Physics I
+PHYS 231: Engineering Physics I
+PHYS 242: Engineering Physics II
