@@ -5,7 +5,10 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -16,6 +19,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -28,21 +32,37 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Main extends Application {
-    private Stage window;
-    private Scene scene1, scene2;
+    
+	private Stage window;
+    private Scene ResourcesScene, AcdemicPlanningScene;
+   
+    // choice box for question scene
     private ChoiceBox<String> question1ChoiceBox = new ChoiceBox<>();
     private ChoiceBox<String> question2ChoiceBox = new ChoiceBox<>();
     private ChoiceBox<String> question3ChoiceBox = new ChoiceBox<>();
     private ChoiceBox<String> question4ChoiceBox = new ChoiceBox<>();
     private ChoiceBox<String> question5ChoiceBox = new ChoiceBox<>();
-    private List<TitledPane> titledPanes = new ArrayList<>();
+    
+    
+    private List<TitledPane> titledPanes = new ArrayList<>(); // keeping a list of the newly added tile panes so I can removed the last one 
+    static List<String> removedHumanitiesClasses = new ArrayList<>(); // keeping a list of the removed categories for Humanities classes
+    static List<String> removedSocialScieneClasses = new ArrayList<>();// keeping a list of the removed categories for Social Science classes
+ 
+    // tracking the location and text of the paste button
     private int pasteIndex = -1;
     private String copyClass = "";
+    
+    
     private static Map<String, String> humanitiesClasses = new HashMap<>();
     private static Map<String, String> socialScienceClasses = new HashMap<>();
+    private Map<TitledPane, List<Button>> titledPaneButtonMap = new HashMap<>();
+    private List<Button> allButtons = new ArrayList<>();
+ 
+
 
     private ArrayList<String> mathLevels = new ArrayList<>(Arrays.asList(
             "Math 091 (Int. Alg. I)",
@@ -69,26 +89,26 @@ public class Main extends Application {
         try {
             window = primaryStage;
 
-            VBox layout1 = new VBox(20);
+            VBox layoutForResourcesScene = new VBox(20);
             Button button1 = new Button("Academic Plan");
             button1.setOnAction(e -> {
-                window.setScene(scene2);
+                window.setScene(AcdemicPlanningScene);
                 window.centerOnScreen();
             });
 
-            layout1.getChildren().addAll(button1);
+            layoutForResourcesScene.getChildren().addAll(button1);
 
-            VBox layout2 = new VBox(20);
+            VBox layoutforAcdemicPlanningScene = new VBox(20);
             Button button2 = new Button("Create your plan");
             Button button3 = new Button("Back");
             button2.setOnAction(e -> academicPlan());
             button3.setOnAction(e -> {
-                primaryStage.setScene(scene1);
+                primaryStage.setScene(ResourcesScene);
                 primaryStage.centerOnScreen();
             });
 
-            scene1 = new Scene(layout1, 200, 200);
-            scene2 = new Scene(layout2, 400, 450);
+            ResourcesScene = new Scene(layoutForResourcesScene, 200, 200);
+            AcdemicPlanningScene = new Scene(layoutforAcdemicPlanningScene, 400, 450);
 
             Label question1Label = new Label("What university are you transferring to?");
             question1ChoiceBox.getItems().addAll("UW Bothell");
@@ -115,11 +135,11 @@ public class Main extends Application {
             VBox question5Box = new VBox(10, question5Label, question5ChoiceBox);
             question5Box.setAlignment(Pos.CENTER);
 
-            layout2.getChildren().addAll(question1Box, question2Box, question3Box, question4Box, question5Box, button2, button3);
-            layout2.setAlignment(Pos.CENTER);
-            layout2.setPadding(new Insets(20, 40, 20, 40));
+            layoutforAcdemicPlanningScene.getChildren().addAll(question1Box, question2Box, question3Box, question4Box, question5Box, button2, button3);
+            layoutforAcdemicPlanningScene.setAlignment(Pos.CENTER);
+            layoutforAcdemicPlanningScene.setPadding(new Insets(20, 40, 20, 40));
 
-            primaryStage.setScene(scene1);
+            primaryStage.setScene(ResourcesScene);
             primaryStage.centerOnScreen();
             primaryStage.show();
         } catch (Exception e) {
@@ -176,7 +196,9 @@ public class Main extends Application {
                 // Season and year are auto adjusted based on the "quarter" ArrayList and question4ChoiceBox
                 TitledPane titledPane = new TitledPane();
                 titledPane.setText(quarter.get(col) + " " + selectedYear);
-
+                
+                List<Button> buttonList = new ArrayList<>();
+                titledPaneButtonMap.put(titledPane, buttonList);
                 // Summer Plan
                 if (quarter.get(col).equalsIgnoreCase("Summer")) {
                 	
@@ -232,31 +254,47 @@ public class Main extends Application {
                             newCol[0] = 0;
                         }
                     });
-
                     removeQuarterBtn.setOnAction(e -> {
-                    	// remove the last tilePane from the list
-                    	// sub tract 1 from the newCol and seasonChanged value
-                    	// make sure seasonVar and newCol don't do below 1 
                         int lastIndex = titledPanes.size() - 1;
                         if (lastIndex >= 0) {
                             TitledPane lastTitledPane = titledPanes.get(lastIndex);
+
+                            // Check if the content is a VBox
+                            if (lastTitledPane.getContent() instanceof VBox) {
+                                VBox vbox = (VBox) lastTitledPane.getContent();
+
+                                // Check if the VBox contains any children
+                                if (vbox.getChildren().size() > 2) {
+                                    // Show an error message or take appropriate action
+                                    boolean yesToRemove = showErrorWithIgnoreOption("Cannot delete the TitledPane because it contains children.");
+                                    
+                                    if (!yesToRemove) {
+                                        // User clicked "Cancel" or closed the dialog
+                                        return;  // Do not proceed with deletion
+                                    }
+                                }
+                            }
+
+                            // Remove the last TitledPane
                             gridPane.getChildren().remove(lastTitledPane);
                             titledPanes.remove(lastIndex);
                             newCol[0]--;
                             seasonChangedVariable[0]--;
+
                             if (seasonChangedVariable[0] < 0) {
                                 seasonChangedVariable[0] = 0;
                             } else if (newCol[0] < 0) {
                                 newCol[0] = 0;
                             }
+                        }
+                    });
 
-                        }});
 
                     
-                    // send you back to scene2 
+                    // send you back to AcdemicPlanningScene 
                     backBtn.setOnAction(e -> {
                         Platform.runLater(() -> {
-                            window.setScene(scene2);
+                            window.setScene(AcdemicPlanningScene);
                             window.centerOnScreen();
                         });
                     });
@@ -317,25 +355,38 @@ public class Main extends Application {
                         int lastIndex = titledPanes.size() - 1;
                         if (lastIndex >= 0) {
                             TitledPane lastTitledPane = titledPanes.get(lastIndex);
+
+                            // Check if the content is a VBox
+                            if (lastTitledPane.getContent() instanceof VBox) {
+                                VBox vbox = (VBox) lastTitledPane.getContent();
+
+                                // Check if the VBox contains any children
+                                if (vbox.getChildren().size() > 2) {
+                                    // Show an error message or take appropriate action
+                                    boolean yesToRemove = showErrorWithIgnoreOption("Cannot delete the TitledPane because it contains children.");
+                                    
+                                    if (!yesToRemove) {
+                                        // User clicked "Cancel" or closed the dialog
+                                        return;  // Do not proceed with deletion
+                                    }
+                                }
+                            }
+
+                            // Remove the last TitledPane
                             gridPane.getChildren().remove(lastTitledPane);
                             titledPanes.remove(lastIndex);
                             newCol[0]--;
                             seasonChangedVariable[0]--;
+
                             if (seasonChangedVariable[0] < 0) {
                                 seasonChangedVariable[0] = 0;
                             } else if (newCol[0] < 0) {
                                 newCol[0] = 0;
                             }
-
                         }
                     });
 
-                    backBtn.setOnAction(e -> {
-                        Platform.runLater(() -> {
-                            window.setScene(scene2);
-                            window.centerOnScreen();
-                        });
-                    });
+
 
                     VBox panel = createPanel(quarterNumber);
                     Button addButton = new Button();
@@ -480,40 +531,12 @@ public class Main extends Application {
         stage.setTitle("Add Options");
         stage.show();
     }
+    private List<Button> allClasses = new ArrayList<>();
+
     private void addRegularClassButton(Button button) {
-        Button newBtn = new Button("New Button");
-        newBtn.setOnAction(e -> handleButtonAction(newBtn));
-
         VBox parentVBox = (VBox) button.getParent();
         int index = parentVBox.getChildren().indexOf(button);
-        parentVBox.getChildren().add(index, newBtn);
 
-    }
-
-    private void addElectiveButton(Button button) {
-        Button electiveButton = createElectiveButton();
-        electiveButton.setOnAction(e -> handleElectiveButtonAction(electiveButton));
-
-        VBox parentVBox = (VBox) button.getParent();
-        int index = parentVBox.getChildren().indexOf(button);
-        parentVBox.getChildren().add(index, electiveButton);
-
-    }
-
-    private void addScienceButton(Button button) {
-        Button newBtn = new Button("New Science");
-        newBtn.setOnAction(e -> handleScienceButtonAction(newBtn));
-        
-        VBox parentVBox = (VBox) button.getParent();
-        int index = parentVBox.getChildren().indexOf(button);
-        parentVBox.getChildren().add(index, newBtn);
-    }
-    
-    
-
-    
-
-    private void handleButtonAction(Button button) {
         Stage stage = new Stage();
         VBox vbox = new VBox(10);
         TextField textField = new TextField("Enter new text");
@@ -522,14 +545,89 @@ public class Main extends Application {
         Button moveBtn = new Button("Move");
 
         changeTextBtn.setOnAction(e -> {
-            button.setText(textField.getText());
-            stage.close();
+            String buttonText = textField.getText();
+            
+            // Check for duplicates before adding the new button
+            if (isDuplicateButton(buttonText)) {
+                // Show an error message (you can customize this part)
+                showError("Duplicate button: " + buttonText);
+            } else {
+                Button newBtn = new Button(buttonText);
+                newBtn.setOnAction(actionEvent -> handleButtonAction(newBtn));
+                allClasses.add(button);
+
+                // Replace the old button with the new one in the list
+                allClasses.set(allClasses.indexOf(button), newBtn);
+
+                parentVBox.getChildren().add(index, newBtn);
+                System.out.println(allClasses);
+                stage.close();
+            }
         });
 
         deleteBtn.setOnAction(e -> {
             ((VBox) button.getParent()).getChildren().remove(button);
+
+            // Remove the button from the list when deleted
+            allClasses.remove(button);
+            System.out.println(allClasses);
+
             stage.close();
         });
+
+        moveBtn.setOnAction(e -> {
+            copyClass = button.getText();
+            ((VBox) button.getParent()).getChildren().remove(button);
+            System.out.println("Text copied: " + copyClass);
+
+            stage.close();
+        });
+
+        vbox.getChildren().addAll(textField, changeTextBtn, deleteBtn, moveBtn);
+        Scene scene = new Scene(vbox, 200, 170);
+        stage.setScene(scene);
+        stage.setTitle("Add Regular Class");
+        stage.show();
+    }
+    private void handleButtonAction(Button button) {
+    	 VBox parentVBox = (VBox) button.getParent();
+         int index = parentVBox.getChildren().indexOf(button);
+
+         Stage stage = new Stage();
+         VBox vbox = new VBox(10);
+         TextField textField = new TextField("Enter new text");
+         Button changeTextBtn = new Button("Change Text");
+         Button deleteBtn = new Button("Delete");
+         Button moveBtn = new Button("Move");
+
+         changeTextBtn.setOnAction(e -> {
+        	    // Get the existing button
+        	    Button existingButton = button;
+
+        	    // Update the text of the existing button
+        	    existingButton.setText(textField.getText());
+
+        	    // Handle the action (if needed)
+        	    handleButtonAction(existingButton);
+                allClasses.set(allClasses.indexOf(button), existingButton);
+
+        	    // Print the updated list
+        	    System.out.println(allClasses);
+
+        	    // Close the stage
+        	    stage.close();
+        	});
+
+
+        deleteBtn.setOnAction(e -> {
+        	   ((VBox) button.getParent()).getChildren().remove(button);
+
+               // Remove the button from the list when deleted
+               allClasses.remove(button);
+               System.out.println(allClasses);
+
+               stage.close();
+           });
 
         moveBtn.setOnAction(e -> {
             copyClass = button.getText();
@@ -547,8 +645,8 @@ public class Main extends Application {
     private void handlePasteButtonAction(VBox parentVBox) {
         if (!copyClass.isEmpty() && pasteIndex != -1) {
             Button pasteBtn = new Button(copyClass);
-            pasteBtn.setOnAction(e -> handleButtonAction(pasteBtn));
-            parentVBox.getChildren().add(pasteIndex, pasteBtn);
+            pasteBtn.setOnAction(e -> handleButtonAction(pasteBtn)); 
+            parentVBox.getChildren().add( pasteIndex, pasteBtn); // paste the new button on to its new location at  #pasteIndex Location
 
             copyClass = "";
         } else {
@@ -560,12 +658,28 @@ public class Main extends Application {
         Button pasteBtn = new Button();
         pasteBtn.setOnAction(e -> {
             handlePasteButtonAction(parentVBox);
-            pasteIndex = parentVBox.getChildren().indexOf(pasteBtn);
+            pasteIndex = parentVBox.getChildren().indexOf(pasteBtn); // captures the position of the paste button
         });
 
         return pasteBtn;
     }
 
+
+    private void addElectiveButton(Button button) {
+        Button electiveButton = createElectiveButton();
+        electiveButton.setOnAction(e -> handleElectiveButtonAction(electiveButton));
+
+        VBox parentVBox = (VBox) button.getParent();
+        int index = parentVBox.getChildren().indexOf(button);
+        parentVBox.getChildren().add(index, electiveButton);
+ 
+
+
+    }
+
+
+
+    
     private Button createElectiveButton() {
         Button electiveButton = new Button("Elective");
         electiveButton.setOnAction(e -> handleElectiveButtonAction(electiveButton));
@@ -613,19 +727,13 @@ public class Main extends Application {
             }
         });
 
-        // Add an event listener to classCategoryChoiceBox to update the available classes in classChoiceBox based on the selected category
         classCategoryChoiceBox.setOnAction(e -> {
             String selectedCategory = classCategoryChoiceBox.getValue();
             if (socialScienceClasses.containsKey(selectedCategory)) {
                 // Populate classChoiceBox with the values (classes) from the selected category
                 classChoiceBox.getItems().clear();
                 classChoiceBox.getItems().addAll(Arrays.asList(socialScienceClasses.get(selectedCategory).split(", ")));
-            }
-        });
-        
-        classCategoryChoiceBox.setOnAction(e -> {
-            String selectedCategory = classCategoryChoiceBox.getValue();
-            if (humanitiesClasses.containsKey(selectedCategory)) {
+            } else if (humanitiesClasses.containsKey(selectedCategory)) {
                 // Populate classChoiceBox with the values (classes) from the selected category
                 classChoiceBox.getItems().clear();
                 classChoiceBox.getItems().addAll(Arrays.asList(humanitiesClasses.get(selectedCategory).split(", ")));
@@ -634,9 +742,25 @@ public class Main extends Application {
 
         Button nextButton = new Button("Next");
         nextButton.setOnAction(e -> {
-            setElectiveButton(electiveButton, classCategoryChoiceBox, classChoiceBox);
-            electiveStage.close(); // Close the elective stage
+            String selectedCategory = classCategoryChoiceBox.getValue();
+            String selectedClass = classChoiceBox.getValue();
+
+            if (selectedCategory != null && selectedClass != null) {
+                String buttonText = selectedCategory + " " + selectedClass;
+
+                if (!isDuplicateButton(buttonText)) {
+                    setElectiveButton(electiveButton, classCategoryChoiceBox, classChoiceBox, classCreditChoiceBox);
+                    removedHumanitiesClasses.add(selectedCategory);
+                    removedSocialScieneClasses.add(selectedCategory);
+                    electiveStage.close(); // Close the elective stage
+                } else {
+                    showError("Duplicate elective detected. Please select a different combination.");
+                }
+            } else {
+                showError("Please select class credits, category, and class before proceeding.");
+            }
         });
+
         Button removeButton = new Button("Remove Elective");
         removeButton.setOnAction(e -> {
             removeElectiveButton(electiveButton);
@@ -651,14 +775,32 @@ public class Main extends Application {
     }
 
     private void removeElectiveButton(Button electiveButton) {
+    	
         VBox parentVBox = (VBox) electiveButton.getParent();
+       
         parentVBox.getChildren().remove(electiveButton);
+     
+        allClasses.remove(electiveButton);
+
+
     }
-    private void setElectiveButton(Button electiveButton, ChoiceBox<String> classCategoryChoiceBox, ChoiceBox<String> classChoiceBox) {
+    private void setElectiveButton(Button electiveButton, ChoiceBox<String> classCategoryChoiceBox, ChoiceBox<String> classChoiceBox, ChoiceBox<String> classCreditChoiceBox) {
         String selectedCategory = classCategoryChoiceBox.getValue();
         String selectedClass = classChoiceBox.getValue();
+        String selectedCredit = classCreditChoiceBox.getValue();
+        String classCredit = "";
+        
+        if (selectedCredit == "Social Science") {
+        	classCredit = "SS";
+        }
+        else {
+        	classCredit = "HUM";
+
+        }
         if (selectedCategory != null && selectedClass != null) {
-            electiveButton.setText(selectedCategory + " " + selectedClass);
+        	electiveButton.setText( "(" + classCredit + ") " + selectedCategory + " " + selectedClass);
+            allClasses.add(electiveButton);
+            System.out.println(allClasses);
         }
     }
     
@@ -686,6 +828,9 @@ public class Main extends Application {
                 if (parts.length == 2) {
                     String category = parts[0].trim();
                     String classes = parts[1].trim();
+                    if (removedHumanitiesClasses.contains(category)) {
+                        continue;
+                    }
                     humanitiesClasses.put(category, classes);
                     currentCategory = category;
                 } else if (currentCategory != null) {
@@ -713,6 +858,9 @@ public class Main extends Application {
                 if (parts.length == 2) {
                     String category = parts[0].trim();
                     String classes = parts[1].trim();
+                    if (removedSocialScieneClasses.contains(category)) {
+                        continue;
+                    }
                     socialScienceClasses.put(category, classes);
                     currentCategory = category;
                 } else if (currentCategory != null) {
@@ -761,13 +909,37 @@ public class Main extends Application {
 
         Button nextButton = new Button("Next");
         nextButton.setOnAction(e -> {
-            setScienceButton(button, scienceTypeChoiceBox, scienceCourseChoiceBox);
-            stage.close(); // Close the science stage
-        });
+            String selectedScienceType = scienceTypeChoiceBox.getValue();
+            String selectedScienceCourse = scienceCourseChoiceBox.getValue();
 
+            if (selectedScienceType != null && selectedScienceCourse != null) {
+    			String scienceType = "";
+                if (selectedScienceType == "Life Science" ) {
+                	scienceType = "LS";
+                }
+                else 
+                {
+                	scienceType = "PS";
+                }
+              String buttonText = ("(" + scienceType +") " + selectedScienceCourse);
+
+                if (!isDuplicateButton(buttonText)) {
+                setScienceButton(button, scienceTypeChoiceBox, scienceCourseChoiceBox);
+                
+                stage.close(); 
+               
+                } else {
+                    showError("Duplicate elective detected. Please select a different combination.");
+                }
+            } else {
+                showError("Please select class credits, category, and class before proceeding.");
+            }
+        });
         Button removeButton = new Button("Remove");
         removeButton.setOnAction(e -> {
             removeScienceButton(button);
+            
+
             stage.close(); // Close the science stage
         });
 
@@ -793,6 +965,7 @@ public class Main extends Application {
 
 
 
+
     private ArrayList<String> readCoursesFromFile(String filePath) {
         ArrayList<String> courses = new ArrayList<>();
 
@@ -812,17 +985,46 @@ public class Main extends Application {
     private void removeScienceButton(Button scienceButton) {
         VBox parentVBox = (VBox) scienceButton.getParent();
         parentVBox.getChildren().remove(scienceButton);
-    }
+        allClasses.remove(scienceButton);
+        System.out.println(allClasses);
 
+    }
     private void setScienceButton(Button scienceButton, ChoiceBox<String> scienceTypeChoiceBox, ChoiceBox<String> scienceCourseChoiceBox) {
         String selectedScienceType = scienceTypeChoiceBox.getValue();
         String selectedScienceCourse = scienceCourseChoiceBox.getValue();
+        String scienceType ="";
+    
+    
         if (selectedScienceType != null && selectedScienceCourse != null) {
-            scienceButton.setText( selectedScienceCourse);
-        }
-    }
+        			
+            if (selectedScienceType == "Life Science" ) {
+            	scienceType = "LS";
+            }
+            else 
+            {
+            	scienceType = "PS";
+            }
+                scienceButton.setText ("(" + scienceType +") " + selectedScienceCourse);
 
- 
+                allClasses.add(scienceButton);
+                System.out.println(allClasses);
+            }}
+    
+
+    private void addScienceButton(Button button) {
+        Button newBtn = new Button("New Science");
+        newBtn.setOnAction(e -> handleScienceButtonAction(newBtn));
+        
+        VBox parentVBox = (VBox) button.getParent();
+        int index = parentVBox.getChildren().indexOf(button);
+        parentVBox.getChildren().add(index, newBtn);
+
+    }
+    
+    
+
+    
+
     private void addEnglishButton(Button button) {
         Stage englishStage = new Stage();
         VBox vbox = new VBox(10);
@@ -867,22 +1069,36 @@ public class Main extends Application {
 
 
     private void addEnglishCourseButton(Button button, String course) {
-        Button newBtn = new Button( course);
-        newBtn.setOnAction(e -> handleButtonAction(newBtn));
+        // Check for duplicate before adding
+        if (!isDuplicateButton(course)) {
+            Button newBtn = new Button(course);
+            newBtn.setOnAction(e -> handleButtonAction(newBtn));
 
-        VBox parentVBox = (VBox) button.getParent();
-        int index = parentVBox.getChildren().indexOf(button);
-        parentVBox.getChildren().add(index, newBtn);
+            VBox parentVBox = (VBox) button.getParent();
+            int index = parentVBox.getChildren().indexOf(button);
+            parentVBox.getChildren().add(index, newBtn);
+            allClasses.add(newBtn);
+            System.out.println(allClasses);
+        } else {
+            showError("Duplicate button! " + course + " already added.");
+        }
     }
+
     private void addChemistryButton(Button button) {
-        Button newBtn = new Button("CHEM&140");
-        newBtn.setOnAction(e -> handleButtonAction(newBtn));
+      
+    	if (!isDuplicateButton("CHEM&140")) {
+            Button newBtn = new Button("CHEM&140");
+            newBtn.setOnAction(e -> handleButtonAction(newBtn));
 
-        VBox parentVBox = (VBox) button.getParent();
-        int index = parentVBox.getChildren().indexOf(button);
-        parentVBox.getChildren().add(index, newBtn);
+            VBox parentVBox = (VBox) button.getParent();
+            int index = parentVBox.getChildren().indexOf(button);
+            parentVBox.getChildren().add(index, newBtn);
+            allClasses.add(newBtn);
+            System.out.println(allClasses);
+        } else {
+            showError("Duplicate button! CHEM&140 already added.");
+        }
     }
- // ...
 
     private void addCSButton(Button button) {
         Stage csStage = new Stage();
@@ -925,17 +1141,61 @@ public class Main extends Application {
 
     private void addCSProjectButton(Button button, String project) {
         Button newBtn = new Button(project);
+        if (!isDuplicateButton(project)) {
         newBtn.setOnAction(e -> handleButtonAction(newBtn));
 
         VBox parentVBox = (VBox) button.getParent();
         int index = parentVBox.getChildren().indexOf(button);
         parentVBox.getChildren().add(index, newBtn);
+        allClasses.add(newBtn);
+        System.out.println(allClasses);
+        }
+     else {
+        showError(project + " button already existed");
+    }
     }
     
 
-    // ...
+    private boolean isDuplicateButton(String buttonText) {
+        // Remove spaces, colons, and convert to lowercase
+        String cleanedButtonText = buttonText.replaceAll("[\\s:]", "").toLowerCase();
 
-  
+        for (Button existingButton : allClasses) {
+            // Remove spaces, colons, and convert to lowercase
+            String cleanedExistingButtonText = existingButton.getText().replaceAll("[\\s:]", "").toLowerCase();
+
+            // Check if the cleaned texts match
+            if (cleanedExistingButtonText.equals(cleanedButtonText)) {
+                return true; // Duplicate found
+            }
+        }
+        return false; // No duplicate
+    }
+
+
+    // Helper method to show an error message (you can customize this part)
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+    public static boolean showErrorWithIgnoreOption(String message) {
+    	Alert alert = new Alert(AlertType.CONFIRMATION);
+    	alert.setTitle("Confirmation Dialog");
+    	alert.setHeaderText("Look, a Confirmation Dialog");
+    	alert.setContentText("Are you ok with this?");
+
+    	Optional<ButtonType> result = alert.showAndWait();
+    	if (result.get() == ButtonType.OK){
+return true;
+    	} else {
+
+    		return false;    	}
+    }
+
+
     public static void main(String[] args) {
         launch(args);
     }
