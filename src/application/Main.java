@@ -10,16 +10,20 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -39,31 +43,37 @@ public class Main extends Application {
     
 	private Stage window;
     private Scene ResourcesScene, AcdemicPlanningScene;
-   
-    // choice box for question scene
-    private ChoiceBox<String> question1ChoiceBox = new ChoiceBox<>();
-    private ChoiceBox<String> question2ChoiceBox = new ChoiceBox<>();
-    private ChoiceBox<String> question3ChoiceBox = new ChoiceBox<>();
-    private ChoiceBox<String> question4ChoiceBox = new ChoiceBox<>();
-    private ChoiceBox<String> question5ChoiceBox = new ChoiceBox<>();
+
+    
+    
+    
+ // choice box for question scene
+    private ChoiceBox<String> question1ChoiceBoxUni = new ChoiceBox<>();
+    private ChoiceBox<String> question2ChoiceBoxMath = new ChoiceBox<>();
+    private ChoiceBox<String> question3ChoiceBoxLanguage = new ChoiceBox<>();
+    private ChoiceBox<String> question4ChoiceBoxYear = new ChoiceBox<>();
+    private ChoiceBox<String> question5ChoiceBoxSummer = new ChoiceBox<>();
     
     
     private List<TitledPane> titledPanes = new ArrayList<>(); // keeping a list of the newly added tile panes so I can removed the last one 
-    static List<String> removedHumanitiesClasses = new ArrayList<>(); // keeping a list of the removed categories for Humanities classes
-    static List<String> removedSocialScieneClasses = new ArrayList<>();// keeping a list of the removed categories for Social Science classes
  
-    // tracking the location and text of the paste button
+ // keeping a list of the removed categories for elective Classes
+    static List<String> removedHumanitiesClasses = new ArrayList<>(); 
+    static List<String> removedSocialScieneClasses = new ArrayList<>();
+ 
+ // keeping a list of all classes. No duplicate allowed
+ private List<Button> allClasses = new ArrayList<>();
+
+// tracking the location and text of the paste button
     private int pasteIndex = -1;
     private String copyClass = "";
     
-    
+// Hash map for elective. Key for categories and values for classes. 
     private static Map<String, String> humanitiesClasses = new HashMap<>();
     private static Map<String, String> socialScienceClasses = new HashMap<>();
-    private Map<TitledPane, List<Button>> titledPaneButtonMap = new HashMap<>();
-    private List<Button> allButtons = new ArrayList<>();
  
 
-
+// Choices available for some of the choice boxes
     private ArrayList<String> mathLevels = new ArrayList<>(Arrays.asList(
             "Math 091 (Int. Alg. I)",
             "Math 092 (Int. Alg. II)",
@@ -84,58 +94,81 @@ public class Main extends Application {
             "CS& 141 Java I",
             "CS 143 Java II"));
 
+  
     @Override
     public void start(Stage primaryStage) {
         try {
             window = primaryStage;
-
+            Image logoImage = new Image("/trojanLogo.jpg");
+           
+   // scene 1
+  // set up for Resources scene
             VBox layoutForResourcesScene = new VBox(20);
-            Button button1 = new Button("Academic Plan");
-            button1.setOnAction(e -> {
+            
+            Button scheduleBtn = new Button("Academic Plan");
+           Button financialAidBtn = new Button("Financial Aid");
+           Button tutoringBtn = new Button("Resources");
+            scheduleBtn.setOnAction(e -> {
                 window.setScene(AcdemicPlanningScene);
                 window.centerOnScreen();
             });
 
-            layoutForResourcesScene.getChildren().addAll(button1);
+           window.setTitle("Program options");
+          window.getIcons().add(logoImage);
 
+            layoutForResourcesScene.getChildren().addAll(tutoringBtn, scheduleBtn, financialAidBtn);
+            layoutForResourcesScene.setAlignment(javafx.geometry.Pos.CENTER);
+
+            
+  // Financial aid Button
+            financialAidBtn.setOnAction(e -> {
+            	 getHostServices().showDocument("https://docs.google.com/document/d/1cFtJcR0PRTcCXPra3C6ik0mOVMIcUih_7BE7WBhb2NM/edit?usp=sharing");
+            });  
+            
+            
+            
+ // scene 2 
+// set up for Academic Planning scene 
             VBox layoutforAcdemicPlanningScene = new VBox(20);
-            Button button2 = new Button("Create your plan");
-            Button button3 = new Button("Back");
-            button2.setOnAction(e -> academicPlan());
-            button3.setOnAction(e -> {
+            Button buildAPlanBtn = new Button("Create your plan");
+            Button goBackToResourcesSceneBtn = new Button("Back");
+            buildAPlanBtn.setOnAction(e -> academicPlan());
+            goBackToResourcesSceneBtn.setOnAction(e -> {
                 primaryStage.setScene(ResourcesScene);
                 primaryStage.centerOnScreen();
             });
 
-            ResourcesScene = new Scene(layoutForResourcesScene, 200, 200);
+            ResourcesScene = new Scene(layoutForResourcesScene, 300, 250);
             AcdemicPlanningScene = new Scene(layoutforAcdemicPlanningScene, 400, 450);
 
-            Label question1Label = new Label("What university are you transferring to?");
-            question1ChoiceBox.getItems().addAll("UW Bothell");
-            VBox question1Box = new VBox(10, question1Label, question1ChoiceBox);
-            question1Box.setAlignment(Pos.CENTER);
+            
+  // Choice Box for Academic Planning Scene
+            Label question1Uni = new Label("What university are you transferring to?");
+            question1ChoiceBoxUni.getItems().addAll("UW Bothell");
+            VBox question1BoxUni = new VBox(10, question1Uni, question1ChoiceBoxUni);
+            question1BoxUni.setAlignment(Pos.CENTER);
 
-            Label question2Label = new Label("What math level would you like to start at?");
-            question2ChoiceBox.getItems().addAll(mathLevels);
-            VBox question2Box = new VBox(10, question2Label, question2ChoiceBox);
-            question2Box.setAlignment(Pos.CENTER);
+            Label question2Math = new Label("What math level would you like to start at?");
+            question2ChoiceBoxMath.getItems().addAll(mathLevels);
+            VBox question2BoxMath = new VBox(10, question2Math, question2ChoiceBoxMath);
+            question2BoxMath.setAlignment(Pos.CENTER);
 
-            Label question3Label = new Label("C++ or Java?");
-            question3ChoiceBox.getItems().addAll("C++", "Java");
-            VBox question3Box = new VBox(10, question3Label, question3ChoiceBox);
-            question3Box.setAlignment(Pos.CENTER);
+            Label question3Language = new Label("C++ or Java?");
+            question3ChoiceBoxLanguage.getItems().addAll("C++", "Java");
+            VBox question3BoxLanguage = new VBox(10, question3Language, question3ChoiceBoxLanguage);
+            question3BoxLanguage.setAlignment(Pos.CENTER);
 
-            Label question4Label = new Label("What year are starting?");
-            question4ChoiceBox.getItems().addAll("2024", "2025", "2026", "2027", "2028", "2029", "2030");
-            VBox question4Box = new VBox(10, question4Label, question4ChoiceBox);
-            question4Box.setAlignment(Pos.CENTER);
+            Label question4Year = new Label("What year are starting?");
+            question4ChoiceBoxYear.getItems().addAll("2024", "2025", "2026", "2027", "2028", "2029", "2030");
+            VBox question4BoxYear = new VBox(10, question4Year, question4ChoiceBoxYear);
+            question4BoxYear.setAlignment(Pos.CENTER);
 
-            Label question5Label = new Label("Summer");
-            question5ChoiceBox.getItems().addAll("Yes", "No");
-            VBox question5Box = new VBox(10, question5Label, question5ChoiceBox);
-            question5Box.setAlignment(Pos.CENTER);
+            Label question5Summer = new Label("Summer");
+            question5ChoiceBoxSummer.getItems().addAll("Yes", "No");
+            VBox question5BoxSummer = new VBox(10, question5Summer, question5ChoiceBoxSummer);
+            question5BoxSummer.setAlignment(Pos.CENTER);
 
-            layoutforAcdemicPlanningScene.getChildren().addAll(question1Box, question2Box, question3Box, question4Box, question5Box, button2, button3);
+            layoutforAcdemicPlanningScene.getChildren().addAll(question1BoxUni, question2BoxMath, question3BoxLanguage, question4BoxYear, question5BoxSummer, buildAPlanBtn, goBackToResourcesSceneBtn);
             layoutforAcdemicPlanningScene.setAlignment(Pos.CENTER);
             layoutforAcdemicPlanningScene.setPadding(new Insets(20, 40, 20, 40));
 
@@ -147,114 +180,239 @@ public class Main extends Application {
         }
     }
     
+    
+    
+    
+ // Schedule scene
     public void academicPlan() {
-        GridPane gridPane = new GridPane();
-        gridPane.setHgap(60);
-        gridPane.setVgap(20);
-        ArrayList<String> quarter = new ArrayList<>();
+
+    	
+    	// array list for all the seasons
+    	ArrayList<String> quarter = new ArrayList<>();
         quarter.add("Fall");
         quarter.add("Winter");
         quarter.add("Spring");
         quarter.add("Summer");
-        VBox buttonVbox = new VBox(20);
-        Button addQuarterBtn = new Button("Add Quarter");
-        Button removeQuarterBtn = new Button("Remove Quarter");
-        Button backBtn = new Button("Back");
-        buttonVbox.getChildren().addAll(addQuarterBtn, removeQuarterBtn, backBtn);
-        buttonVbox.setAlignment(Pos.CENTER);
+   BorderPane borderPane = new BorderPane();
+   
+        
+// basic grid pane setting
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(60);
+        gridPane.setVgap(20);
+        
 
+      
+
+        
+ // Text area and Menu Bar
+        MenuBar menuBar = new MenuBar();
+
+        VBox menuBarAndTextLayout = new VBox();
+        Image aboutMenuLogo = new Image("/me.png");
+       
+        Menu fileMenu = new Menu("File");
+        Menu editMenu = new Menu("Edit");
+        Menu helpMenu = new Menu("Help");
+        Menu aboutMenu = new Menu("About");
+        MenuItem addQuarter = new MenuItem("Add new quarter");
+        MenuItem removeQuarter = new MenuItem("Remove quarter");
+        MenuItem createNewPlan = new MenuItem("Create new Plan");
+        MenuItem linkToElectiveClasses = new MenuItem("List of electives");
+        MenuItem aboutTheIdea = new MenuItem("The Idea");
+        MenuItem aboutTheProject = new MenuItem("The Project");
+        MenuItem aboutMe = new MenuItem("Background");
+
+        fileMenu.getItems().addAll(createNewPlan);
+        editMenu.getItems().addAll(addQuarter, removeQuarter);
+        aboutMenu.getItems().addAll(aboutTheIdea,aboutTheProject,aboutMe);
+        helpMenu.getItems().addAll(linkToElectiveClasses);
         TextArea textArea = new TextArea();
-        textArea.setText("Rule 1 ");
+        textArea.setStyle("-fx-font-weight: bold;");
+        textArea.setText("Rule 1: Must have 2 years of foreign language in high school\n"
+                + "Rule 2: Math 146 is RECOMMENDED\n"
+                + "Rule 3: CS244, CS291, and STEM298 are recommended\n"
+                + "Rule 4: Only select 5 elective class. Side note: UWB don't recognize our diversity elective\n"
+                );
         textArea.setEditable(false);
-        textArea.setPrefSize(200, 100);
+        textArea.setPrefSize(365, 200);
+        menuBar.getMenus().addAll(fileMenu, editMenu, helpMenu, aboutMenu );
+        
+       
+        menuBarAndTextLayout.getChildren().addAll(textArea);
 
-        int selectedYear = Integer.parseInt(question4ChoiceBox.getValue());
-        String selectedSummer = question5ChoiceBox.getValue();
-        int summerOn = selectedSummer.equals("Yes") ? 1 : 0;
+        
+   // About menu layout      
+        aboutTheProject.setOnAction(e-> {
+        	Stage stage = new Stage();
+        	TextArea whoAmIText = new TextArea(
+        	"My name is Chien. I am a former student at EvCC and UW Bothell.\n" 
+        	+"I built this program in order to automate the advising process\n"
+        	+"for CS students. \n" 
+        	+"My ultimate goal for this project is to make college education \n"
+        	+ "more accessible to ESL students"
+        			
+        			);
+        	Scene whoAmIScene = new Scene(whoAmIText, 380 , 105);
+            stage.setTitle("Who Am I");
+            stage.getIcons().addAll(aboutMenuLogo);
+            stage.setScene(whoAmIScene);
+        	stage.show();       
+        	});
+        
+       aboutMe.setOnAction(e -> {
+        	Stage stage = new Stage();
+        	TextArea whoAmIText = new TextArea(
+        	"	I am a Vietnamese immgrant. I was born in Dong Nai, Vietnam\n\n" 
+        	+"Me and my family came here when I was 10 years old. During this\n\n"
+        	+"time, I played a lot of video game such as League of Legends, CSGO,\n\n "
+        	+ "and The Witcher 3. Wanting a better battle station to compete with\n\n"
+        	+ "other players, I saved up some money during Vietnamese New Year and\n\n"
+        	+ "build my first PC. I instanntly fell in love with the process of \n\n"
+        	+"researching and experimenting with computer parts. I graduated\n\n"
+        	+"highschool with a ComptiaA++ certificate and started learning how to \n\n"
+        	+ "code in college because I wanna build my own game someday."
+        	
+        			
+        			);
+        	Scene whoAmIScene = new Scene(whoAmIText, 410 , 320);
+            stage.setTitle("About me");
+            stage.getIcons().addAll(aboutMenuLogo);
+
+            stage.setScene(whoAmIScene);
+        	stage.show();       
+        	});
+        
+       aboutTheIdea.setOnAction(e -> {
+        	Stage stage = new Stage();
+        	TextArea whoAmIText = new TextArea(
+        	"	The inspiration for the project came to me while I was working.\n\n" 
+        	+"at a Vietnamese restraunt. Many of my coworkers are first-generation \n\n"
+        	+"Vietnamese who dropped out of high school due to language barriers.\n\n "
+        	+ "They chose to work in restaurants since their dream jobs required a degree\n\n"
+        	+ ", and they felt their English proficiency wasn't good enough for college.\n\n"
+        	+ "Learning about this made me aware of my privilege in speaking English, \n\n"
+        	+"a privilege that allowed me to apply to college, get financial aid, and \n\n"
+        	+"communicate with my professors. Having successfully adapted to my life in\n\n"
+        	+ "America, it was disheartening for me to see my fellow Vietnamese\n\n"
+        	+ "A being denied an education because of their lack of English proficiency.\n\n"
+        	+ " This inspired me to use my computer science background to help immigrant \n\n"
+        	+"students overcome language barriers in education.\n\n"
+        	
+        			);
+        	Scene whoAmIScene = new Scene(whoAmIText, 430 , 440);
+            stage.setTitle("About me");
+            stage.getIcons().addAll(aboutMenuLogo);
+
+            stage.setScene(whoAmIScene);
+        	stage.show();       
+        	});
+    // Help menu hyperlink
+        linkToElectiveClasses.setOnAction(event -> {
+            getHostServices().showDocument("https://www.everettcc.edu/files/programs/aas-dta-current-classes.pdf");
+        });
+     
+
+        
+        
+   // Layout for school image
+        VBox schoolImageLayout = new VBox();
+        Image image = new Image(getClass().getResourceAsStream("/UWBothell.png"));
+
+        // Create an ImageView and set the image
+        ImageView imageView = new ImageView(image);
+
+        // Set the fit width and fit height properties to make the image bigger
+        imageView.setFitWidth(375); // Set the desired width
+        imageView.setFitHeight(250); // Set the desired height
+
+        // Add the ImageView to the VBox
+        schoolImageLayout.getChildren().add(imageView);
+
+
+ // getting the years and summer choices
+        int selectedYear = Integer.parseInt(question4ChoiceBoxYear.getValue());
+        String selectedSummer = question5ChoiceBoxSummer.getValue();
+        int summerOn = selectedSummer.equals("Yes") ? 1 : 0; // summer on = 1 if yes and = 0 if no. 
     	
-        //  Starting position for the manually added row and column
+//  Starting position for the manually added row and column
         int[] newCol = {0};
         int[] newRow = {3};
 
-        // Adjusting the size of the Academic Planning scene based on "Summer" question 
-        Scene scene;
-        if (summerOn == 1) {
-            scene = new Scene(new ScrollPane(gridPane), 1250, 560);
-        } else {
-            scene = new Scene(new ScrollPane(gridPane), 1000, 560);
-        }
 
-    
-        // For loop to create a academic plan based on choiceBoxes results. Both will have two rows of quarters equal to two years of school/
+
+        // Make sure there is 5 elective button only
+        int electiveCount = 0;
+
+ // For loop to create a academic plan based on choiceBoxes results. Both will have two rows of quarters equal to two years of school/
         for (int row = 0; row < 2; row++) {
         	
-        	// How many quarter per year will based on whether the user chooses summer or not. 
+ // How many quarter per year will based on whether the user chooses summer or not. 
             for (int col = 0; col < (3 + summerOn); col++) {
                 int quarterNumber = row * 3 + col + 1;
                 
-                // Automatically created tilePane
-                // Season and year are auto adjusted based on the "quarter" ArrayList and question4ChoiceBox
+ // Automatically created tilePane
+ // Season and year are auto adjusted based on the "quarter" ArrayList and question4ChoiceBoxYear
                 TitledPane titledPane = new TitledPane();
                 titledPane.setText(quarter.get(col) + " " + selectedYear);
-                
-                List<Button> buttonList = new ArrayList<>();
-                titledPaneButtonMap.put(titledPane, buttonList);
-                // Summer Plan
+             
+// Summer Plan
                 if (quarter.get(col).equalsIgnoreCase("Summer")) {
                 	
-                	//  keeping track of the season using the first index value
+  //  keeping track of the season using the first index value
                     int[] seasonChangedVariable = {0};
                     
-                    // getting the selected Year from choice box #4
-                    int selectedYr = Integer.parseInt(question4ChoiceBox.getValue());
+ // getting the selected Year from choice box #4
+                    int selectedYr = Integer.parseInt(question4ChoiceBoxYear.getValue());
                     
-                    // adding two years to the starting years since that is where the newly added quarter will start
+ // adding two years to the starting years since that is where the newly added quarter will start
                     int[] yearChangeVariable = {selectedYr + 2};
 
-                    // add Quarter button for summer plan
-                    addQuarterBtn.setOnAction(e -> {
-                        TitledPane newTitledPane = new TitledPane();
-                        titledPanes.add(newTitledPane);
+ // add Quarter button for summer plan
+                    addQuarter.setOnAction(e -> {
+                        TitledPane newQuarterTilePane = new TitledPane();
+                        titledPanes.add(newQuarterTilePane);
+                        System.out.println(titledPanes.size());
+
+// adding text to the the tilePane
+                        newQuarterTilePane.setText(quarter.get(seasonChangedVariable[0]) + " " + yearChangeVariable[0]);
                         
-                        // adding text to the the tilePane
-                        newTitledPane.setText(quarter.get(seasonChangedVariable[0]) + " " + yearChangeVariable[0]);
-                        
-                        // Moving to the next index and getting the next season within the "quarter" arrayList
-                        // if index value is equal to 4. Reset the value of seasonChangedVariable to 0 and add 1 to the year
+// Moving to the next index and getting the next season within the "quarter" arrayList
+// if index value is equal to 4. Reset the value of seasonChangedVariable to 0 and add 1 to the year
                         seasonChangedVariable[0]++;
                        if (seasonChangedVariable[0] == 4) {
                             seasonChangedVariable[0] = 0;
                             yearChangeVariable[0]++;
                         }
                         
-                       	VBox panel2 = createPanel(10);
-                       
+ // Quarter layout 
+                       	VBox newQuarterLayout = createPanel(10);
                        	Button addButton = new Button();
+                      
+
                         addButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/add (1).png"))));
                         addButton.setOnAction(event -> showAddOptions(addButton));
-
-                        
-                        Button pasteButton = createPasteButton(panel2);
+                        Button pasteButton = createPasteButton(newQuarterLayout);
                         pasteButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/copy (1).png"))));
 
-
-                        panel2.getChildren().addAll(addButton, pasteButton);
-
-                        newTitledPane.setPrefWidth(190);
-                        newTitledPane.setPrefHeight(250);
-                        newTitledPane.setContent(panel2);
+                        setButtonColor(addButton, "#F0F0F0", "#e74c3c");
+                        setButtonColor(pasteButton, "#F0F0F0", "#e74c3c");
+                        newQuarterLayout.getChildren().addAll(addButton, pasteButton);
+                        newQuarterTilePane.setPrefWidth(190);
+                        newQuarterTilePane.setPrefHeight(250);
+                        newQuarterTilePane.setContent(newQuarterLayout);
                         
                         // setting the position of the new quarter 
                         //change column after every successful addition 
                         // once 4 is added on one row. Move on to the next row
-                        gridPane.add(newTitledPane, newCol[0], newRow[0]);
+                        gridPane.add(newQuarterTilePane, newCol[0], newRow[0]);
                         newCol[0]++; 
                         if (newCol[0] == 4) {
                         	newRow[0]++;
                             newCol[0] = 0;
                         }
                     });
-                    removeQuarterBtn.setOnAction(e -> {
+                    removeQuarter.setOnAction(e -> {
                         int lastIndex = titledPanes.size() - 1;
                         if (lastIndex >= 0) {
                             TitledPane lastTitledPane = titledPanes.get(lastIndex);
@@ -283,7 +441,8 @@ public class Main extends Application {
 
                             if (seasonChangedVariable[0] < 0) {
                                 seasonChangedVariable[0] = 0;
-                            } else if (newCol[0] < 0) {
+                            }
+                         if (newCol[0] < 0) {
                                 newCol[0] = 0;
                             }
                         }
@@ -292,7 +451,7 @@ public class Main extends Application {
 
                     
                     // send you back to AcdemicPlanningScene 
-                    backBtn.setOnAction(e -> {
+                    createNewPlan.setOnAction(e -> {
                         Platform.runLater(() -> {
                             window.setScene(AcdemicPlanningScene);
                             window.centerOnScreen();
@@ -302,7 +461,8 @@ public class Main extends Application {
                     VBox panel = new VBox(10);
                     Button addButton = new Button();
                     Button pasteButton = createPasteButton(panel);
-
+                    setButtonColor(addButton, "#F0F0F0", "#e74c3c");
+                    setButtonColor(pasteButton, "#F0F0F0", "#e74c3c");
                     addButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/add (1).png"))));
                     pasteButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/copy (1).png"))));
 
@@ -314,44 +474,52 @@ public class Main extends Application {
                     gridPane.add(titledPane, col, row);
                 } else {
                     int[] seasonChangedVariable = {0};
-                    int selectedYr = Integer.parseInt(question4ChoiceBox.getValue());
+                    int selectedYr = Integer.parseInt(question4ChoiceBoxYear.getValue());
                     int[] yearChangeVariable = {selectedYr + 2};
 
-                    addQuarterBtn.setOnAction(e -> {
-                        TitledPane newTitledPane = new TitledPane();
-                        titledPanes.add(newTitledPane);
-
-                        newTitledPane.setText(quarter.get(seasonChangedVariable[0]) + " " + yearChangeVariable[0]);
+                    addQuarter.setOnAction(e -> {
+                        TitledPane newQuarterTilePane = new TitledPane();
+                        titledPanes.add(newQuarterTilePane);
+                        newQuarterTilePane.setText(quarter.get(seasonChangedVariable[0]) + " " + yearChangeVariable[0]);
                         seasonChangedVariable[0]++;
                         if (seasonChangedVariable[0] == 3) {
                             seasonChangedVariable[0] = 0;
                             yearChangeVariable[0]++;
                         }
 
-                        VBox panel2 = createPanel(10);
+                        VBox newQuarterLayout = createPanel(10);
 
                         Button addButton = new Button();
-                        Button pasteButton = createPasteButton(panel2);
-
+                        Button pasteButton = createPasteButton(newQuarterLayout);
+                        setButtonColor(addButton, "#F0F0F0", "#e74c3c");
+                        setButtonColor(pasteButton, "#F0F0F0", "#e74c3c");
                         addButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/add (1).png"))));
                         pasteButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/copy (1).png"))));
 
                         addButton.setOnAction(event -> showAddOptions(addButton));
 
-                        panel2.getChildren().addAll(addButton, pasteButton);
+                        newQuarterLayout.getChildren().addAll(addButton, pasteButton);
 
-                        newTitledPane.setPrefWidth(190);
-                        newTitledPane.setPrefHeight(250);
-                        newTitledPane.setContent(panel2);
-                        gridPane.add(newTitledPane, newCol[0], newRow[0]);
+                        newQuarterTilePane.setPrefWidth(190);
+                        newQuarterTilePane.setPrefHeight(250);
+                        newQuarterTilePane.setContent(newQuarterLayout);
+                        gridPane.add(newQuarterTilePane, newCol[0], newRow[0]);
                         newCol[0]++;
                         if (newCol[0] == 3) {
                         	newRow[0]++;
                             newCol[0] = 0;
                         }
                     });
+                    
+                    
+                    createNewPlan.setOnAction(e -> {
+                        Platform.runLater(() -> {
+                            window.setScene(AcdemicPlanningScene);
+                            window.centerOnScreen();
+                        });
+                    });
 
-                    removeQuarterBtn.setOnAction(e -> {
+                    removeQuarter.setOnAction(e -> {
                         int lastIndex = titledPanes.size() - 1;
                         if (lastIndex >= 0) {
                             TitledPane lastTitledPane = titledPanes.get(lastIndex);
@@ -380,9 +548,10 @@ public class Main extends Application {
 
                             if (seasonChangedVariable[0] < 0) {
                                 seasonChangedVariable[0] = 0;
-                            } else if (newCol[0] < 0) {
-                                newCol[0] = 0;
                             }
+                                if (newCol[0] < 0) {
+                                    newCol[0] = 0;
+                                }
                         }
                     });
 
@@ -391,10 +560,13 @@ public class Main extends Application {
                     VBox panel = createPanel(quarterNumber);
                     Button addButton = new Button();
                     Button pasteButton = createPasteButton(panel);
-
-                    if (row < 2) {
+                    setButtonColor(addButton, "#F0F0F0", "#e74c3c");
+                    setButtonColor(pasteButton, "#F0F0F0", "#e74c3c");
+                    
+                  if (electiveCount < 5) {
                         Button electiveButton = createElectiveButton();
                         panel.getChildren().add(electiveButton);
+                        electiveCount++;
                     }
 
                     addButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/add (1).png"))));
@@ -413,11 +585,21 @@ public class Main extends Application {
             selectedYear++;
         }
 
-        gridPane.add(textArea, 3 + summerOn, 0);
-        gridPane.add(buttonVbox, 3 + summerOn, 1, 1, 1);
+        gridPane.add(menuBarAndTextLayout, 3 + summerOn, 0);
+        
+        gridPane.add(schoolImageLayout, 3 + summerOn, 1, 1, 1);
 
         gridPane.setPadding(new Insets(10, 10, 10, 10));
-
+        borderPane.setTop(menuBar);
+        borderPane.setCenter(gridPane);
+     // Adjusting the size of the Academic Planning scene based on "Summer" question 
+        Scene scene;
+        if (summerOn == 1) {
+            scene = new Scene(new ScrollPane(borderPane), 1450, 570);
+            
+        } else {
+            scene = new Scene(new ScrollPane(borderPane), 1200, 570);
+        }
         window.setScene(scene);
         window.setTitle("Academic Planning");
         scene.getWindow().centerOnScreen();
@@ -426,24 +608,26 @@ public class Main extends Application {
     }
 
 
-
+    
+    
+    // Auto add math and cs button
     private VBox createPanel(int quarterNumber) {
-        String selectedUniversity = question1ChoiceBox.getValue();
-        String selectedMathLevel = question2ChoiceBox.getValue();
-        String selectedCSCourse = question3ChoiceBox.getValue();
+        String selectedUniversity = question1ChoiceBoxUni.getValue();
+        String selectedMathLevel = question2ChoiceBoxMath.getValue();
+        String selectedCSCourse = question3ChoiceBoxLanguage.getValue();
 
+  // adding math classess
         if (selectedUniversity != null && selectedUniversity.equals("UW Bothell")) {
             mathLevels.remove("Math& 163 (Calculus 3)");
         }
 
         VBox panel = new VBox(10);
 
-        // Check if Math classes are selected
         if (selectedMathLevel != null ) {
         	
             int levelsPerQuarter = 1;
-            int startIndex = (quarterNumber - 1) * levelsPerQuarter + mathLevels.indexOf(selectedMathLevel);
-            int endIndex = Math.min(startIndex + levelsPerQuarter, mathLevels.size());
+            int startIndex = (quarterNumber - 1) * levelsPerQuarter + mathLevels.indexOf(selectedMathLevel); // calculate the starting index for the first math button
+            int endIndex = Math.min(startIndex + levelsPerQuarter, mathLevels.size()); // calculate the last index for the last math button
 
             for (int i = startIndex; i < endIndex; i++ ) {
                 Button mathButton = new Button(mathLevels.get(i));
@@ -452,7 +636,8 @@ public class Main extends Application {
             }
         }
 
-        // Check if CS classes are selected
+        
+  // adding cs classess 
         if (selectedCSCourse != null) {
             ArrayList<String> selectedClasses;
             if ("C++".equals(selectedCSCourse)) {
@@ -460,7 +645,6 @@ public class Main extends Application {
             } else if ("Java".equals(selectedCSCourse)) {
                 selectedClasses = javaClasses;
             } else {
-                // Handle other cases or set a default value
                 selectedClasses = new ArrayList<>();
             }
 
@@ -482,7 +666,9 @@ public class Main extends Application {
     }
 
 
-
+ 
+    
+ // add button scene
     private void showAddOptions(Button button) {
         Stage stage = new Stage();
         VBox vbox = new VBox(10);
@@ -495,11 +681,12 @@ public class Main extends Application {
         Button chemistryBtn = new Button("Chemistry");
         Button csBtn = new Button("Recommended CS Class");
 
-        final Button finalButton = button;  // Create a final variable
+        final Button finalButton = button;  
 
         regularClassesBtn.setOnAction(e -> {
             addRegularClassButton(finalButton);
             stage.close();
+            
         });
 
         electiveBtn.setOnAction(e -> {
@@ -531,12 +718,12 @@ public class Main extends Application {
         stage.setTitle("Add Options");
         stage.show();
     }
-    private List<Button> allClasses = new ArrayList<>();
 
+    // regular button method. Some of the other button might also implement this method
     private void addRegularClassButton(Button button) {
-        VBox parentVBox = (VBox) button.getParent();
+        
+    	VBox parentVBox = (VBox) button.getParent();
         int index = parentVBox.getChildren().indexOf(button);
-
         Stage stage = new Stage();
         VBox vbox = new VBox(10);
         TextField textField = new TextField("Enter new text");
@@ -544,54 +731,50 @@ public class Main extends Application {
         Button deleteBtn = new Button("Delete");
         Button moveBtn = new Button("Move");
 
+      
+        
         changeTextBtn.setOnAction(e -> {
             String buttonText = textField.getText();
-            
-            // Check for duplicates before adding the new button
-            if (isDuplicateButton(buttonText)) {
-                // Show an error message (you can customize this part)
-                showError("Duplicate button: " + buttonText);
-            } else {
+            if (isDuplicateButton(buttonText)) { 				// Check for duplicates before adding the new button
+            	showError("Duplicate button: " + buttonText);   // Show an error message if there is duplicate
+            									}
+             else {
                 Button newBtn = new Button(buttonText);
                 newBtn.setOnAction(actionEvent -> handleButtonAction(newBtn));
-                allClasses.add(button);
-
-                // Replace the old button with the new one in the list
-                allClasses.set(allClasses.indexOf(button), newBtn);
-
-                parentVBox.getChildren().add(index, newBtn);
-                System.out.println(allClasses);
+                allClasses.add(button);									// add button to list
+                allClasses.set(allClasses.indexOf(button), newBtn);    // Replace the old button with the new one in the list
+                parentVBox.getChildren().add(index, newBtn);           // adding the new button into the original position
                 stage.close();
             }
         });
 
+      
         deleteBtn.setOnAction(e -> {
             ((VBox) button.getParent()).getChildren().remove(button);
-
-            // Remove the button from the list when deleted
-            allClasses.remove(button);
-            System.out.println(allClasses);
-
+            allClasses.remove(button);             // Remove the button from the list when deleted
             stage.close();
         });
 
+     
         moveBtn.setOnAction(e -> {
             copyClass = button.getText();
             ((VBox) button.getParent()).getChildren().remove(button);
             System.out.println("Text copied: " + copyClass);
-
             stage.close();
         });
 
+   
         vbox.getChildren().addAll(textField, changeTextBtn, deleteBtn, moveBtn);
         Scene scene = new Scene(vbox, 200, 170);
         stage.setScene(scene);
         stage.setTitle("Add Regular Class");
         stage.show();
     }
+    
+    
+    
+  // handling regular button
     private void handleButtonAction(Button button) {
-    	 VBox parentVBox = (VBox) button.getParent();
-         int index = parentVBox.getChildren().indexOf(button);
 
          Stage stage = new Stage();
          VBox vbox = new VBox(10);
@@ -601,34 +784,21 @@ public class Main extends Application {
          Button moveBtn = new Button("Move");
 
          changeTextBtn.setOnAction(e -> {
-        	    // Get the existing button
         	    Button existingButton = button;
-
-        	    // Update the text of the existing button
-        	    existingButton.setText(textField.getText());
-
-        	    // Handle the action (if needed)
+        	    existingButton.setText(textField.getText());         	    // Update the text of the existing button
         	    handleButtonAction(existingButton);
                 allClasses.set(allClasses.indexOf(button), existingButton);
-
-        	    // Print the updated list
-        	    System.out.println(allClasses);
-
-        	    // Close the stage
-        	    stage.close();
+                stage.close();
         	});
 
 
         deleteBtn.setOnAction(e -> {
         	   ((VBox) button.getParent()).getChildren().remove(button);
-
-               // Remove the button from the list when deleted
-               allClasses.remove(button);
-               System.out.println(allClasses);
-
-               stage.close();
+        	   allClasses.remove(button);
+        	   stage.close();
            });
 
+        
         moveBtn.setOnAction(e -> {
             copyClass = button.getText();
             ((VBox) button.getParent()).getChildren().remove(button);
@@ -642,6 +812,9 @@ public class Main extends Application {
         stage.show();
     }
 
+   
+    
+    // handling paste button
     private void handlePasteButtonAction(VBox parentVBox) {
         if (!copyClass.isEmpty() && pasteIndex != -1) {
             Button pasteBtn = new Button(copyClass);
@@ -943,15 +1116,12 @@ public class Main extends Application {
             stage.close(); // Close the science stage
         });
 
-        // Align the question and choice boxes to the left
         scienceTypeBox.setAlignment(Pos.CENTER_LEFT);
         scienceCourseBox.setAlignment(Pos.CENTER_LEFT);
 
-        // Set the preferred width of the ChoiceBoxes
-        scienceTypeChoiceBox.setPrefWidth(411); // Adjust the width as needed
-        scienceCourseChoiceBox.setPrefWidth(400); // Adjust the width as needed
+        scienceTypeChoiceBox.setPrefWidth(411); 
+        scienceCourseChoiceBox.setPrefWidth(400); 
 
-        // Create an HBox for buttons and center them
         HBox buttonBox = new HBox(10);
         buttonBox.setAlignment(Pos.CENTER);
         buttonBox.getChildren().addAll(nextButton, removeButton);
@@ -1023,8 +1193,8 @@ public class Main extends Application {
     
     
 
-    
-
+    private boolean englishCheck = true;
+ private boolean englishCheck2 = true;
     private void addEnglishButton(Button button) {
         Stage englishStage = new Stage();
         VBox vbox = new VBox(10);
@@ -1038,8 +1208,11 @@ public class Main extends Application {
         HBox secondRow = new HBox(10);
         Label label2 = new Label("1st English quarter: ");
         Button english101Btn = new Button("English 101");
+
         english101Btn.setOnAction(e -> {
             addEnglishCourseButton(button, "English 101");
+            englishCheck2 = false;
+            englishCheck = false;
             englishStage.close();
         });
         secondRow.getChildren().addAll(label2, english101Btn);
@@ -1050,14 +1223,22 @@ public class Main extends Application {
         Button english102Btn = new Button("English 102");
         english102Btn.setOnAction(e -> {
             addEnglishCourseButton(button, "English 102");
+            englishCheck = true;
             englishStage.close();
         });
         Text orText = new Text("or");
         Button english235Btn = new Button("English 235");
         english235Btn.setOnAction(e -> {
             addEnglishCourseButton(button, "English 235");
+            englishCheck = true;
+
             englishStage.close();
         });
+        
+        english101Btn.setDisable(!englishCheck2);
+        english102Btn.setDisable(englishCheck);
+        english235Btn.setDisable(englishCheck);
+
         thirdRow.getChildren().addAll(label3, english102Btn, orText, english235Btn);
 
         vbox.getChildren().addAll(firstRow, secondRow, thirdRow);
@@ -1069,7 +1250,70 @@ public class Main extends Application {
 
 
     private void addEnglishCourseButton(Button button, String course) {
-        // Check for duplicate before adding
+
+    	
+    	if (!isDuplicateButton(course)) {
+            Button newBtn = new Button(course);
+            newBtn.setOnAction(e -> handleButtonAction(newBtn));
+
+            VBox parentVBox = (VBox) button.getParent();
+            int index = parentVBox.getChildren().indexOf(button);
+            parentVBox.getChildren().add(index, newBtn);
+            allClasses.add(newBtn);
+            System.out.println(allClasses);
+        } else {
+            showError("Duplicate button! " + course + " already added.");
+        }
+    }
+    private boolean chemistryCheck = true;
+
+    private void addChemistryButton(Button button) {
+        Stage chemistryStage = new Stage();
+        VBox vbox = new VBox(10);
+
+        // First Row
+        HBox firstRow = new HBox(10);
+        Label label1 = new Label("Select Chemistry course available:");
+        firstRow.getChildren().addAll(label1);
+
+        // Third Row
+        HBox thirdRow = new HBox(10);
+        Label label3 = new Label("2nd Chemistry quarter: ");
+        Button chem161Btn = new Button("CHEM161");
+        chem161Btn.setDisable(chemistryCheck); // Initially disable CHEM161 button
+
+        chem161Btn.setOnAction(e -> {
+            addChemistryCourseButton(button, "CHEM161");
+            
+            chemistryStage.close();
+        });
+        thirdRow.getChildren().addAll(label3, chem161Btn);
+
+        // Second Row
+        
+        HBox secondRow = new HBox(10);
+        Label label2 = new Label("1st Chemistry quarter: ");
+        Button chem140Btn = new Button("CHEM&140");
+        chem140Btn.setDisable(!chemistryCheck);
+
+        chem140Btn.setOnAction(e -> {
+            addChemistryCourseButton(button, "CHEM&140");
+            chemistryCheck = false;
+            chemistryStage.close();
+        });
+        secondRow.getChildren().addAll(label2, chem140Btn);
+
+        
+     
+   
+        vbox.getChildren().addAll(firstRow, secondRow, thirdRow);
+        Scene scene = new Scene(vbox, 310, 90);
+        chemistryStage.setScene(scene);
+        chemistryStage.setTitle("Chemistry Courses");
+        chemistryStage.show();
+    }
+
+    private void addChemistryCourseButton(Button button, String course) {
         if (!isDuplicateButton(course)) {
             Button newBtn = new Button(course);
             newBtn.setOnAction(e -> handleButtonAction(newBtn));
@@ -1083,23 +1327,7 @@ public class Main extends Application {
             showError("Duplicate button! " + course + " already added.");
         }
     }
-
-    private void addChemistryButton(Button button) {
-      
-    	if (!isDuplicateButton("CHEM&140")) {
-            Button newBtn = new Button("CHEM&140");
-            newBtn.setOnAction(e -> handleButtonAction(newBtn));
-
-            VBox parentVBox = (VBox) button.getParent();
-            int index = parentVBox.getChildren().indexOf(button);
-            parentVBox.getChildren().add(index, newBtn);
-            allClasses.add(newBtn);
-            System.out.println(allClasses);
-        } else {
-            showError("Duplicate button! CHEM&140 already added.");
-        }
-    }
-
+    
     private void addCSButton(Button button) {
         Stage csStage = new Stage();
         VBox vbox = new VBox(10);
@@ -1157,11 +1385,11 @@ public class Main extends Application {
     
 
     private boolean isDuplicateButton(String buttonText) {
-        // Remove spaces, colons, and convert to lowercase
+        // Remove spaces, colons, and convert to lower case
         String cleanedButtonText = buttonText.replaceAll("[\\s:]", "").toLowerCase();
 
         for (Button existingButton : allClasses) {
-            // Remove spaces, colons, and convert to lowercase
+            // Remove spaces, colons, and convert to lower case
             String cleanedExistingButtonText = existingButton.getText().replaceAll("[\\s:]", "").toLowerCase();
 
             // Check if the cleaned texts match
@@ -1193,6 +1421,15 @@ return true;
     	} else {
 
     		return false;    	}
+    }
+
+    private void setButtonColor(Button button, String normalColor, String hoverColor) {
+        // Set the initial background color of the button
+        button.setStyle("-fx-background-color: " + normalColor + ";");
+
+        // Hover effect
+        button.setOnMouseEntered(event -> button.setStyle("-fx-background-color: " + hoverColor + "; -fx-text-fill: white;"));
+        button.setOnMouseExited(event -> button.setStyle("-fx-background-color: " + normalColor + "; -fx-text-fill: black;"));
     }
 
 
