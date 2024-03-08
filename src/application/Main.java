@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -43,8 +44,10 @@ public class Main extends Application {
     
 	private Stage window;
     private Scene ResourcesScene, AcdemicPlanningScene;
-
-    
+double chem140 = 0.0;
+double chem161 = 0.0;
+double eng101 =0.0;
+double eng102Or235 = 0.0;
     
     
  // choice box for question scene
@@ -107,7 +110,6 @@ public class Main extends Application {
             
             Button scheduleBtn = new Button("Academic Plan");
            Button financialAidBtn = new Button("Financial Aid");
-           Button tutoringBtn = new Button("Resources");
             scheduleBtn.setOnAction(e -> {
                 window.setScene(AcdemicPlanningScene);
                 window.centerOnScreen();
@@ -116,7 +118,7 @@ public class Main extends Application {
            window.setTitle("Program options");
           window.getIcons().add(logoImage);
 
-            layoutForResourcesScene.getChildren().addAll(tutoringBtn, scheduleBtn, financialAidBtn);
+            layoutForResourcesScene.getChildren().addAll( scheduleBtn, financialAidBtn);
             layoutForResourcesScene.setAlignment(javafx.geometry.Pos.CENTER);
 
             
@@ -171,6 +173,7 @@ public class Main extends Application {
             layoutforAcdemicPlanningScene.getChildren().addAll(question1BoxUni, question2BoxMath, question3BoxLanguage, question4BoxYear, question5BoxSummer, buildAPlanBtn, goBackToResourcesSceneBtn);
             layoutforAcdemicPlanningScene.setAlignment(Pos.CENTER);
             layoutforAcdemicPlanningScene.setPadding(new Insets(20, 40, 20, 40));
+            primaryStage.setTitle("Generating new plan");
 
             primaryStage.setScene(ResourcesScene);
             primaryStage.centerOnScreen();
@@ -333,7 +336,7 @@ public class Main extends Application {
  // getting the years and summer choices
         int selectedYear = Integer.parseInt(question4ChoiceBoxYear.getValue());
         String selectedSummer = question5ChoiceBoxSummer.getValue();
-        int summerOn = selectedSummer.equals("Yes") ? 1 : 0; // summer on = 1 if yes and = 0 if no. 
+        int summerOn = selectedSummer.equals("Yes") ? 1 : 0; 
     	
 //  Starting position for the manually added row and column
         int[] newCol = {0};
@@ -391,8 +394,15 @@ public class Main extends Application {
                       
 
                         addButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/add (1).png"))));
-                        addButton.setOnAction(event -> showAddOptions(addButton));
-                        Button pasteButton = createPasteButton(newQuarterLayout);
+
+                        addButton.setOnAction(event -> {
+                            String text = 	newQuarterTilePane.getText();
+                            	System.out.println(text);
+                            	showAddOptions(addButton, text);
+                            	
+                            });
+                            
+                                                    Button pasteButton = createPasteButton(newQuarterLayout);
                         pasteButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/copy (1).png"))));
 
                         setButtonColor(addButton, "#F0F0F0", "#e74c3c");
@@ -453,6 +463,7 @@ public class Main extends Application {
                     // send you back to AcdemicPlanningScene 
                     createNewPlan.setOnAction(e -> {
                         Platform.runLater(() -> {
+
                             window.setScene(AcdemicPlanningScene);
                             window.centerOnScreen();
                         });
@@ -466,8 +477,15 @@ public class Main extends Application {
                     addButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/add (1).png"))));
                     pasteButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/copy (1).png"))));
 
-                    addButton.setOnAction(e -> showAddOptions(addButton));
-                    panel.getChildren().addAll(addButton, pasteButton);
+
+                    addButton.setOnAction(event -> {
+                        String text = 	titledPane.getText();
+                        	System.out.println(text);
+                        	showAddOptions(addButton, text);
+                        	
+                        });
+                        
+                                            panel.getChildren().addAll(addButton, pasteButton);
                     titledPane.setPrefWidth(190);
                     titledPane.setPrefHeight(250);
                     titledPane.setContent(panel);
@@ -496,7 +514,14 @@ public class Main extends Application {
                         addButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/add (1).png"))));
                         pasteButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/copy (1).png"))));
 
-                        addButton.setOnAction(event -> showAddOptions(addButton));
+                        addButton.setOnAction(event -> {
+                            String text = 	newQuarterTilePane.getText();
+                            	System.out.println(text);
+                            	showAddOptions(addButton, text);
+                            	
+                            });
+                            
+                            
 
                         newQuarterLayout.getChildren().addAll(addButton, pasteButton);
 
@@ -572,7 +597,15 @@ public class Main extends Application {
                     addButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/add (1).png"))));
                     pasteButton.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/copy (1).png"))));
 
-                    addButton.setOnAction(e -> showAddOptions(addButton));
+                    addButton.setOnAction(e -> {
+                    String text = 	titledPane.getText();
+                    	System.out.println(text);
+                    	showAddOptions(addButton, text);
+                    	
+                    });
+                    
+                    
+                    
                     panel.getChildren().addAll(addButton, pasteButton);
 
                     titledPane.setPrefWidth(190);
@@ -669,7 +702,7 @@ public class Main extends Application {
  
     
  // add button scene
-    private void showAddOptions(Button button) {
+    private void showAddOptions(Button button, String quarter) {
         Stage stage = new Stage();
         VBox vbox = new VBox(10);
         Label label = new Label("Choose an option:");
@@ -700,11 +733,11 @@ public class Main extends Application {
         });
 
         englishBtn.setOnAction(e -> {
-            addEnglishButton(finalButton);
+            addEnglishButton(finalButton, quarter);
             stage.close();
         });
         chemistryBtn.setOnAction(e -> {
-            addChemistryButton(finalButton);
+            addChemistryButton(finalButton, quarter);
             stage.close();
         });
         csBtn.setOnAction(e -> {
@@ -1195,7 +1228,9 @@ public class Main extends Application {
 
     private boolean englishCheck = true;
  private boolean englishCheck2 = true;
-    private void addEnglishButton(Button button) {
+    private void addEnglishButton(Button button , String quarter) {
+    	double seasonYearNumber = convertSeasonAndYearToNumber(quarter);
+
         Stage englishStage = new Stage();
         VBox vbox = new VBox(10);
 
@@ -1210,9 +1245,13 @@ public class Main extends Application {
         Button english101Btn = new Button("English 101");
 
         english101Btn.setOnAction(e -> {
-            addEnglishCourseButton(button, "English 101");
-            englishCheck2 = false;
-            englishCheck = false;
+        	eng101 = seasonYearNumber;
+       
+           	   addEnglishCourseButton(button, "English 101");
+               englishCheck2 = false;
+               englishCheck = false;
+            
+       
             englishStage.close();
         });
         secondRow.getChildren().addAll(label2, english101Btn);
@@ -1222,15 +1261,39 @@ public class Main extends Application {
         Label label3 = new Label("2nd English quarter: ");
         Button english102Btn = new Button("English 102");
         english102Btn.setOnAction(e -> {
-            addEnglishCourseButton(button, "English 102");
-            englishCheck = true;
+        	eng102Or235 = seasonYearNumber;
+           	if (eng102Or235 > eng101  ) {
+                addEnglishCourseButton(button, "English 102");
+                englishCheck = true;
+            	}
+            	else if (eng102Or235 == eng101  )  {
+                    showError("English 101 is a prequisite for English 102");
+
+            	}
+            	else {
+                    showError("English 101 is a prequisite for English 102");
+
+            	}
+    
             englishStage.close();
         });
         Text orText = new Text("or");
         Button english235Btn = new Button("English 235");
         english235Btn.setOnAction(e -> {
-            addEnglishCourseButton(button, "English 235");
-            englishCheck = true;
+        	eng102Or235 = seasonYearNumber;
+           	if (eng102Or235 > eng101  ) {
+                addEnglishCourseButton(button, "English 235");
+                englishCheck = true;
+            	}
+            	else if (eng102Or235 == eng101  )  {
+                    showError("English 101 is a prequisite for English 235");
+
+            	}
+            	else {
+                    showError("English 101 is a prequisite for English 235");
+
+            	}
+   
 
             englishStage.close();
         });
@@ -1267,9 +1330,10 @@ public class Main extends Application {
     }
     private boolean chemistryCheck = true;
 
-    private void addChemistryButton(Button button) {
+    private void addChemistryButton(Button button, String quarter) {
         Stage chemistryStage = new Stage();
         VBox vbox = new VBox(10);
+    	double seasonYearNumber = convertSeasonAndYearToNumber(quarter);
 
         // First Row
         HBox firstRow = new HBox(10);
@@ -1283,8 +1347,20 @@ public class Main extends Application {
         chem161Btn.setDisable(chemistryCheck); // Initially disable CHEM161 button
 
         chem161Btn.setOnAction(e -> {
+        	chem161 = seasonYearNumber ;
+
+        	if (chem161 > chem140  ) {
             addChemistryCourseButton(button, "CHEM161");
-            
+            System.out.println(chem161);
+        	}
+        	else if (chem161 == chem140  )  {
+                showError("Chem140 is a prequisite for Chem161");
+
+        	}
+        	else {
+                showError("Chem140 is a prequisite for Chem161");
+
+        	}
             chemistryStage.close();
         });
         thirdRow.getChildren().addAll(label3, chem161Btn);
@@ -1297,6 +1373,9 @@ public class Main extends Application {
         chem140Btn.setDisable(!chemistryCheck);
 
         chem140Btn.setOnAction(e -> {
+        	chem140 = seasonYearNumber ;
+            System.out.println(chem140);
+
             addChemistryCourseButton(button, "CHEM&140");
             chemistryCheck = false;
             chemistryStage.close();
@@ -1328,6 +1407,38 @@ public class Main extends Application {
         }
     }
     
+    private double convertSeasonAndYearToNumber(String seasonYear) {
+        // Mapping seasons to numbers
+        Map<String, Double> seasonMapping = new HashMap<>();
+        seasonMapping.put("Fall", 0.1);
+        seasonMapping.put("Winter",0.2);
+        seasonMapping.put("Spring", 0.3);
+        seasonMapping.put("Summer", 0.4);
+
+        // Split the input string into season and year
+        String[] parts = seasonYear.split(" "); 
+        if (parts.length < 2) {
+            return -1; // Return an error code or throw an exception as needed
+        }
+        String season = parts[0];
+        String yearStr = parts[1];
+
+        // Convert the year to an integer
+        try {
+            int year = Integer.parseInt(yearStr);
+            Double seasonNumber = seasonMapping.get(season);
+            
+            if (seasonNumber != null) {
+                return year + seasonNumber; // Simply add the season number to the year
+            } else {
+                return -1; // Season not found, return an error code or throw an exception
+            }
+        } catch (NumberFormatException e) {
+            return -1; // Year was not a valid number, return an error code or throw an exception
+        }
+    }
+
+
     private void addCSButton(Button button) {
         Stage csStage = new Stage();
         VBox vbox = new VBox(10);
@@ -1422,7 +1533,7 @@ return true;
 
     		return false;    	}
     }
-
+  
     private void setButtonColor(Button button, String normalColor, String hoverColor) {
         // Set the initial background color of the button
         button.setStyle("-fx-background-color: " + normalColor + ";");
